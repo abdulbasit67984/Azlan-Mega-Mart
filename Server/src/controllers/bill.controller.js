@@ -715,12 +715,8 @@ const getBills = asyncHandler(async (req, res) => {
     if (billStatus) query.billStatus = { $in: billStatus.split(",") };
     console.log('startDate, endDate', startDate, endDate)
     if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        // Force to local midnight boundaries
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
+        const start = new Date(startDate + "T00:00:00.000Z");
+        const end = new Date(endDate + "T23:59:59.999Z");
 
         query.createdAt = { $gte: start, $lte: end };
     }
