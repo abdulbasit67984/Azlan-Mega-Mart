@@ -98,7 +98,7 @@ const BarcodePrinting = () => {
             }
             svg {
               width: 100%;
-              height: 40px;
+              height: 30px;
             }
           </style>
         </head>
@@ -112,7 +112,7 @@ const BarcodePrinting = () => {
                   `JsBarcode("#barcode-${p.productCode}", "${p.productCode}", {
                     format: "CODE128",
                     width: 2,
-                    height: 40,
+                    height: 30,
                     displayValue: false,
                     margin: 0
                   });`
