@@ -715,10 +715,17 @@ const getBills = asyncHandler(async (req, res) => {
     if (billStatus) query.billStatus = { $in: billStatus.split(",") };
     console.log('startDate, endDate', startDate, endDate)
     if (startDate && endDate) {
-        const start = new Date(startDate + "T00:00:00.000Z");
-        const end = new Date(endDate + "T23:59:59.999Z");
+        const start = new Date(startDate);
+        start.setDate(start.getDate() + 1); // move 1 day ahead
+        start.setHours(0, 0, 0, 0);
 
-        query.createdAt = { $gte: start, $lte: end };
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        query.createdAt = {
+            $gte: start,
+            $lte: end,
+        };
     }
 
     const bills = await Bill.find(query)
