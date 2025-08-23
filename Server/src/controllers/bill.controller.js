@@ -715,8 +715,8 @@ const getBills = asyncHandler(async (req, res) => {
     if (billStatus) query.billStatus = { $in: billStatus.split(",") };
     if (startDate && endDate) {
         query.createdAt = {
-            $gte: new Date(new Date(startDate)),
-            $lt: new Date(new Date(endDate)),
+            $gt: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+            $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
         };
     }
 
