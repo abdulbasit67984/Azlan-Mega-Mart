@@ -338,7 +338,7 @@ function Header() {
     {
       name: 'Add Roles',
       slug: `/${primaryPath}/add-role`,
-      active: isAdmin(),
+      active: true,
       isAdmin: true
     }
 
