@@ -53,81 +53,88 @@ const BarcodePrinting = () => {
 //   };
 
   const handlePrint = () => {
-    const width = labelSize === "half" ? "40mm" : "60mm";
-    const printWindow = window.open("", "_blank", "width=600,height=800");
+  const width = labelSize === "half" ? "40mm" : "60mm";
+  const printWindow = window.open("", "_blank", "width=600,height=800");
 
-    if (!printWindow) return;
+  if (!printWindow) return;
 
-    const labels = selectedProduct
-      .map(
-        (p) => `
-        <div class="label">
-          <svg id="barcode-${p.productCode}"></svg>
-          <div class="info">
-            <strong>${p.productName}</strong><br />
-            
-          </div>
-        </div>`
-      )
-      .join("");
+  const labels = selectedProduct
+    .map(
+      (p) => `
+      <div class="label">
+        <svg id="barcode-${p.productCode}"></svg>
+        <div class="info">
+          <strong>${p.productName}</strong><br />
+        </div>
+      </div>`
+    )
+    .join("");
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <style>
-            @media print {
-              body {
-                margin: 0;
-                padding: 0;
-              }
-            }
+  printWindow.document.write(`
+    <html>
+      <head>
+        <style>
+          @media print {
             body {
-              font-family: sans-serif;
-              padding: 10px;
+              margin: 0;
+              padding: 0;
             }
-            .label {
-              width: ${width};
-              text-align: center;
-              margin: 10px auto;
-              padding: 8px 0;
-              border-bottom: 1px dashed #ccc;
-            }
-            .info {
-              font-size: 12px;
-              margin-top: 4px;
-            }
-            svg {
-              width: 100%;
-              height: 40px;
-            }
-          </style>
-        </head>
-        <body>
+          }
+          body {
+            font-family: sans-serif;
+            padding: 10px;
+          }
+          .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* two per row */
+            gap: 10px;
+          }
+          .label {
+            width: ${width};
+            text-align: center;
+            padding: 8px 0;
+            border: 1px dashed #ccc;
+            margin: auto;
+          }
+          .info {
+            font-size: 12px;
+            margin-top: 4px;
+          }
+          svg {
+            width: 100%;
+            height: 40px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
           ${labels}
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-          <script>
-            ${selectedProduct
-              .map(
-                (p) =>
-                  `JsBarcode("#barcode-${p.productCode}", "${p.productCode}", {
-                    format: "CODE128",
-                    width: 1.5,
-                    height: 40,
-                    displayValue: false,
-                    margin: 0
-                  });`
-              )
-              .join("\n")}
-            window.onload = () => {
-              window.print();
-              window.onafterprint = () => window.close();
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+        <script>
+          ${selectedProduct
+            .map(
+              (p) =>
+                `JsBarcode("#barcode-${p.productCode}", "${p.productCode}", {
+                  format: "CODE128",
+                  width: 1.5,
+                  height: 40,
+                  displayValue: false,
+                  margin: 0
+                });`
+            )
+            .join("\n")}
+          window.onload = () => {
+            window.print();
+            window.onafterprint = () => window.close();
+          };
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
 
   return (
     <div className=" mx-auto p-4 border rounded shadow bg-white">
