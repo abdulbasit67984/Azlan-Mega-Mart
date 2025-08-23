@@ -332,14 +332,14 @@ function Header() {
     {
       name: 'Register Business',
       slug: `/${primaryPath}/register-business`,
-      active: true,
+      active: isAdmin(),
       isAdmin: isAdmin()
     },
     {
       name: 'Add Roles',
       slug: `/${primaryPath}/add-role`,
-      active: true,
-      isAdmin: isAdmin()
+      active: isAdmin(),
+      isAdmin: true
     }
 
   ]
