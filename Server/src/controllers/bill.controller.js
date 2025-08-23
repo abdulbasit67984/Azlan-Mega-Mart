@@ -290,7 +290,7 @@ const registerBill = asyncHandler(async (req, res) => {
         });
 
     } catch (error) {
-        
+
         if (error instanceof ApiError) {
             throw error;
         }
@@ -373,7 +373,7 @@ const mergeBills = asyncHandler(async (req, res) => {
                 parentBill.flatDiscount += childBills.reduce((sum, b) => sum + (b.flatDiscount || 0), 0);
                 parentBill.totalPurchaseAmount += childBills.reduce((sum, b) => sum + (b.totalPurchaseAmount || 0), 0);
                 let remainingAmount = parentBill.totalAmount - parentBill.paidAmount - parentBill.flatDiscount
-                parentBill.billStatus = (remainingAmount) <= 0 ? 'paid' : (parentBill.paidAmount > 0 ? 'partiallypaid' : 'unpaid' )
+                parentBill.billStatus = (remainingAmount) <= 0 ? 'paid' : (parentBill.paidAmount > 0 ? 'partiallypaid' : 'unpaid')
                 parentBill.description = `Merged bill containing ${childBills.length + 1} bills`;
 
                 transaction.addOperation(
@@ -433,7 +433,7 @@ const mergeBills = asyncHandler(async (req, res) => {
                     billPaymentType: firstChildBill.billPaymentType,
                     billItems: allBillItems,
                     flatDiscount,
-                    billStatus: (remainingAmount) <= 0 ? 'paid' : (paidAmount > 0 ? 'partiallypaid' : 'unpaid' ),
+                    billStatus: (remainingAmount) <= 0 ? 'paid' : (paidAmount > 0 ? 'partiallypaid' : 'unpaid'),
                     totalAmount,
                     paidAmount,
                     totalPurchaseAmount,
@@ -451,10 +451,10 @@ const mergeBills = asyncHandler(async (req, res) => {
             // Update all child bills to point to the parent
             for (const childBill of childBills) {
                 const originalChildBill = { ...childBill.toObject() };
-                
+
                 childBill.mergedInto = parentBill._id;
                 childBill.description = `Bill merged into ${parentBill.billNo}`
-                
+
                 transaction.addOperation(
                     async () => await childBill.save(),
                     async () => {
@@ -467,7 +467,7 @@ const mergeBills = asyncHandler(async (req, res) => {
             }
 
 
-            res.status(200).json(new ApiResponse(200, { 
+            res.status(200).json(new ApiResponse(200, {
                 mergedBill: parentBill,
                 mergedCount: childBills.length
             }, "Bills merged successfully!"));
@@ -714,10 +714,10 @@ const getBills = asyncHandler(async (req, res) => {
     if (customer) query.customer = customer;
     if (billStatus) query.billStatus = { $in: billStatus.split(",") };
     if (startDate && endDate) {
-        query.createdAt = {
-            $gt: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
-            $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)),
-        };
+        const start = new Date(`${startDate}T00:00:00`);
+        const end = new Date(`${endDate}T23:59:59.999`);
+
+        query.createdAt = { $gte: start, $lte: end };
     }
 
     const bills = await Bill.find(query)
@@ -806,14 +806,14 @@ const getSingleBill = asyncHandler(async (req, res) => {
         if (!user) {
             throw new ApiError(401, "Authorization Failed!");
         }
-    
+
         const BusinessId = user.BusinessId;
-    
+
         // Validate bill number
         if (!billNo) {
             throw new ApiError(400, "Bill number is required!");
         }
-    
+
         // Find the bill and populate all required details
         const bill = await Bill.findOne({ BusinessId, billNo })
             .populate({
@@ -847,11 +847,11 @@ const getSingleBill = asyncHandler(async (req, res) => {
                 ],
             })
             .lean(); // Convert Mongoose document to plain JS object for easier manipulation
-    
+
         if (!bill) {
             throw new ApiError(404, `No bill found with the number ${billNo}`);
         }
-    
+
         // Respond with the bill details
         return res.status(200).json(
             new ApiResponse(200, bill, "Bill retrieved successfully!")
@@ -931,7 +931,7 @@ const billPayment = asyncHandler(async (req, res) => {
 
             customerIndividualAccount.accountBalance -= (amountPaid + flatDiscount);
 
-            if(customerIndividualAccount.mergedInto !== null){
+            if (customerIndividualAccount.mergedInto !== null) {
                 const mergedIntoAccount = await IndividualAccount.findById(customerIndividualAccount.mergedInto);
                 mergedIntoAccount.accountBalance -= (amountPaid + flatDiscount);
                 await mergedIntoAccount.save();
