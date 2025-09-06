@@ -35,6 +35,9 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../../../pages/Loader';
 import { useForm } from 'react-hook-form';
 import { extractErrorMessage } from '../../../utils/extractErrorMessage';
+import { useReactToPrint } from "react-to-print";
+import ViewBill from "./bills/ViewBill";
+import ViewBillThermal from "./bills/ViewBillThermal";
 
 
 const InvoiceComponent = () => {
@@ -63,6 +66,8 @@ const InvoiceComponent = () => {
   const [addBalanceToDiscount, setAddBalanceToDiscount] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [bill, setBill] = useState(null)
 
   const [showAddExtraProductModal, setShowAddExtraProductModal] = useState(false);
   const [extraProduct, setExtraProduct] = useState({
@@ -437,6 +442,121 @@ const InvoiceComponent = () => {
     customer.customerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const componentRef = useRef();
+
+  // print hook
+  const handleDirectPrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  const handleFullyPaid = async () => {
+
+    if (!billType || !billPaymentType || !totalAmount) {
+      alert("Please fill all the required fields.");
+      return;
+    }
+
+    const userConfirmed = window.confirm(
+      "Are you sure you want to Generate the invoice? This action cannot be undone."
+    );
+
+    const billId = billNo || ""
+
+    if (userConfirmed) {
+      setIsLoading(true)
+      console.log(selectedItems)
+      try {
+        const billItems = selectedItems.map((item) => ({
+          productId: item._id,
+          quantity: item.quantity,
+          billItemDiscount: item.discount,
+          billItemPrice: item.salePrice1,
+          billItemPack: item.productPack,
+          billItemUnit: item.billItemUnit,
+        }))
+
+        // console.log('first', description,
+        //   'billType:', billType,
+        //   billPaymentType,
+        //   'customer:', customerId,
+        //   billItems,
+        //   'flatDiscount:', flatDiscount || 0,
+        //   'billStatus:', isPaid,
+        //   'totalAmount:', totalAmount || 0,
+        //   'paidAmount:', paidAmount || 0,
+        //   dueDate,
+        //   'extraItems:', extraProducts)
+
+        const response = await config.createInvoice({
+          description,
+          billType,
+          billPaymentType,
+          customer: customerId,
+          billItems,
+          flatDiscount: 0,
+          billStatus: 'paid',
+          totalAmount: totalAmount || 0,
+          paidAmount: totalAmount || 0,
+          dueDate,
+          extraItems: extraProducts
+        });
+
+        if (response) {
+          console.log("response: ", response);
+          dispatch(setSelectedItems([]))
+          dispatch(setFlatDiscount(0))
+          dispatch(setTotalQty(0))
+          dispatch(setTotalAmount(0))
+          dispatch(setTotalGrossAmount(0))
+          dispatch(setPaidAmount(''))
+          dispatch(setPreviousBalance(0))
+          dispatch(setProductName(''))
+          dispatch(setProductQuantity(''))
+          dispatch(setProductDiscount(''))
+          dispatch(setProductPrice(''))
+          dispatch(setProduct({}))
+          dispatch(setCustomer(null));
+          dispatch(setExtraProducts([]))
+        }
+
+      } catch (error) {
+        console.error('Failed to generate bill', error.response.data)
+        const errorMessage = extractErrorMessage(error)
+        setBillError(errorMessage)
+      } finally {
+        setIsLoading(false)
+
+      }
+    }
+
+    if (!billError) {
+
+      try {
+        setIsLoading(true)
+        const response = await config.fetchSingleBill(billId)
+
+        if (response.data) {
+          setBill(response.data);
+        }
+      } catch (error) {
+        const errorMessage = extractErrorMessage(error)
+        setBillError(errorMessage)
+      } finally {
+        setIsLoading(false)
+
+      }
+    }
+
+
+  };
+
+  useEffect(() => {
+    if (bill) {
+      handleDirectPrint();
+      setBill(null)
+    }
+  }, [bill]);
+
   useEffect(() => {
     console.log('extraProducts', extraProducts)
   }, [extraProducts])
@@ -655,6 +775,29 @@ const InvoiceComponent = () => {
         </div>
       )}
 
+      <div style={{ display: "none" }}>
+        {billType === "thermal" ? (
+          <ViewBillThermal
+            ref={componentRef}
+            bill={bill ? bill : {}}
+            packingSlip={false}
+            exemptedParagraph={false}
+            showPreviousBalance={false}
+            previousBalance={0}
+          />
+        ) : (
+          <ViewBill
+            ref={componentRef}
+            bill={bill ? bill : {}}
+            packingSlip={false}
+            exemptedParagraph={false}
+            showPreviousBalance={false}
+            previousBalance={0}
+          />
+        )}
+      </div>
+
+
 
       {/* Invoice Information */}
       <div className="mb-2">
@@ -679,15 +822,23 @@ const InvoiceComponent = () => {
             onChange={(e) => dispatch(setDate(e.target.value))}
           />
 
-          <Input
-            label='Description:'
-            placeholder='Enter Description'
-            divClass="flex items-center"
-            labelClass="w-28"
-            className='w-44 text-xs p-1 '
-            value={description || ''}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <div className='flex gap-2'>
+            <Input
+              label='Description:'
+              placeholder='Enter Description'
+              divClass="flex items-center"
+              labelClass="w-20"
+              className='w-28 text-xs p-1 '
+              value={description || ''}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+
+            <Button className={`w-40 px-4 ${billType === 'thermal' ? 'hover:bg-red-800' : 'hover:bg-gray-700'}`}
+              bgColor={billType === 'thermal' ? 'bg-red-600' : A4Color.a4500}
+              onClick={clearInvoice}>
+              <p className='text-xs text-white'>Clear Invoice</p>
+            </Button>
+          </div>
 
 
           {/* <div className='grid grid-cols-2'> */}
@@ -881,11 +1032,11 @@ const InvoiceComponent = () => {
             {priceError && <p className="pl-2 text-red-500 text-xs">{priceError}</p>}
           </Input>
 
-          <div className='col-span-2'>
+          <div className='col-span-2 '>
             <Button className={`w-40 px-4 ${billType === 'thermal' ? 'hover:bg-red-800' : 'hover:bg-gray-700'}`}
-              bgColor={billType === 'thermal' ? 'bg-red-600' : A4Color.a4500}
-              onClick={clearInvoice}>
-              <p className='text-xs text-white'>Clear Invoice</p>
+              bgColor={billType === 'thermal' ? 'bg-cyan-600' : A4Color.a4500}
+              onClick={handleFullyPaid}>
+              <p className='text-xs text-white'>Fully Paid</p>
             </Button>
           </div>
 
