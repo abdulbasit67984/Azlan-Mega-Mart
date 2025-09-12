@@ -34,6 +34,9 @@ import config from '../../../features/config';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../../pages/Loader';
 import { useForm } from 'react-hook-form';
+// import { saveQuotation } from '../../../utils/quotationStorage';
+import QuotationComponent from './quotation/QuotationComponent';
+import QuotationList from './quotation/QuotationList';
 import { extractErrorMessage } from '../../../utils/extractErrorMessage';
 import { useReactToPrint } from "react-to-print";
 import ViewBill from "./bills/ViewBill";
@@ -67,6 +70,8 @@ const InvoiceComponent = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [showQuotationListModal, setShowQuotationListModal] = useState(false);
+
   const [bill, setBill] = useState(null)
 
   const [showAddExtraProductModal, setShowAddExtraProductModal] = useState(false);
@@ -93,9 +98,6 @@ const InvoiceComponent = () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
   }, [isInvoiceGenerated, viewBillNo]);
-
-
-
 
   const tableContainerRef = useRef(null);
 
@@ -430,6 +432,47 @@ const InvoiceComponent = () => {
     }
   };
 
+  const generateQuotation = () => {
+    if (!billType || !billPaymentType || !totalAmount) {
+      alert("Please fill all the required fields.");
+      return;
+    }
+
+    const userConfirmed = window.confirm(
+      "Do you want to save this as a Quotation?"
+    );
+
+    if (userConfirmed) {
+      const quotation = {
+        id: Date.now(), // unique id
+        description,
+        billType,
+        billPaymentType,
+        customer: customerId,
+        billItems: selectedItems.map((item) => ({
+          productId: item._id,
+          quantity: item.quantity,
+          billItemDiscount: item.discount,
+          billItemPrice: item.salePrice1,
+          billItemPack: item.productPack,
+          billItemUnit: item.billItemUnit,
+        })),
+        flatDiscount: flatDiscount || 0,
+        totalAmount: totalAmount || 0,
+        paidAmount: paidAmount || 0,
+        dueDate,
+        extraItems: extraProducts,
+        createdAt: new Date().toISOString()
+      };
+
+      // save in localStorage
+      // saveQuotation(quotation);
+
+      alert("Quotation saved successfully ✅");
+    }
+  };
+
+
   const handleViewBill = (billNo) => {
     navigate(`/${primaryPath}/sales/view-bill/${billNo}`);
   }
@@ -517,7 +560,10 @@ const InvoiceComponent = () => {
           dispatch(setProduct({}))
           dispatch(setCustomer(null));
           dispatch(setExtraProducts([]))
+
         }
+        setViewBillNo(billNo)
+        fetchLastBillNo(billType)
 
       } catch (error) {
         console.error('Failed to generate bill', error.response.data)
@@ -533,7 +579,7 @@ const InvoiceComponent = () => {
 
       try {
         setIsLoading(true)
-        const response = await config.fetchSingleBill(billId)
+        const response = await config.fetchSingleBill(billNo)
 
         if (response.data) {
           setBill(response.data);
@@ -586,6 +632,7 @@ const InvoiceComponent = () => {
   //   }
   // }, [dispatch, customerIndex, customerData])
 
+
   const fetchLastBillNo = async (billType) => {
     setIsLoading(true)
     try {
@@ -601,8 +648,6 @@ const InvoiceComponent = () => {
 
 
   useEffect(() => {
-
-
 
     fetchLastBillNo(billType)
   }, [billType])
@@ -697,11 +742,7 @@ const InvoiceComponent = () => {
             </span>
             <h2 className={`${billError && 'text-red-500'} text-lg font-thin mb-4`}>{billError ? billError : 'Invoice generated successfully!'}</h2>
             {isInvoiceGenerated &&
-              <Button
-                ref={buttonRef}
-                className='px-4 text-xs'
-                onClick={() => handleViewBill(viewBillNo)}
-              >
+              <Button className='px-4 text-xs' onClick={() => handleViewBill(viewBillNo)}>
                 View Invoice
               </Button>}
           </div>
@@ -854,14 +895,16 @@ const InvoiceComponent = () => {
             </select>
           </label>
 
-          <label className="ml-1 flex items-center">
-            <span className="w-28">Payment Type: <span className='text-red-600'>*</span></span>
-            <select onChange={(e) => setBillPaymentType(e.target.value)} className={`${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100} border p-1 rounded text-xs w-44`}>
-              <option value="cash">Cash</option>
-              <option value="credit">Credit</option>
-            </select>
-          </label>
-          {/* </div> */}
+          <Input
+            label='Due Date:'
+            divClass="flex items-center "
+            type="date"
+            labelClass="w-28 text-red-600"
+            className='w-44 text-xs p-1 text-red-600'
+            value={dueDate || ''}
+            onChange={(e) => setDueDate(e.target.value)}
+          >
+          </Input>
 
           <label className="ml-1 flex gap-2 items-start"> {/* Changed to flex-col and items-start */}
             <span className="w-28 mb-1">Customer Name:</span> {/* Added margin-bottom for spacing */}
@@ -948,16 +991,80 @@ const InvoiceComponent = () => {
           />
 
 
-          <Input
-            label='Due Date:'
-            divClass="flex items-center col-span-4 w-52"
-            type="date"
-            labelClass="w-24 text-red-600"
-            className='w-56 text-xs p-1 text-red-600'
-            value={dueDate || ''}
-            onChange={(e) => setDueDate(e.target.value)}
-          >
-          </Input>
+          <div className='col-span-2 flex items-center'>
+            <div className={`w-full rounded-md ${billType === 'thermal' ? "bg-purple-500" : A4Color.a4100}`}>
+              <QuotationComponent
+                selectedItems={selectedItems}
+                totalAmount={totalAmount}
+              />
+            </div>
+          </div>
+
+          <div className='col-span-2 flex items-center'>
+            <Button
+              className="px-4 w-40 hover:bg-emerald-800"
+              bgColor={billType === 'thermal' ? "bg-emerald-700" : A4Color.a4500}
+              onClick={() => setShowQuotationListModal(true)}
+            >
+              <p className="text-xs text-white">Quotation List</p>
+            </Button>
+          </div>
+
+          {showQuotationListModal &&
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+              <QuotationList
+                onClose={() => setShowQuotationListModal(false)}
+                onLoadQuotation={(q) => {
+                  // Prefer full payload if available
+                  const payload = q.payload ?? {};
+
+                  // If you want to restore raw selected items directly:
+                  const items =
+                    payload._rawSelectedItems ??
+                    q.items ?? // older minimal schema
+                    [];
+
+                  // --- Redux restores (adjust import paths) ---
+                  // set invoice core fields
+                  dispatch(setSelectedItems(items));
+                  dispatch(setFlatDiscount(payload.flatDiscount ?? 0));
+                  dispatch(setTotalAmount(payload.totalAmount ?? q.total ?? 0));
+                  dispatch(setPaidAmount(payload.paidAmount ?? 0));
+                  dispatch(setPreviousBalance(0)); // if you track it
+                  // Optional resets:
+                  dispatch(setTotalQty(0));
+                  dispatch(setTotalGrossAmount(0));
+                  dispatch(setProductName(""));
+                  dispatch(setProductQuantity(""));
+                  dispatch(setProductDiscount(""));
+                  dispatch(setProductPrice(""));
+                  dispatch(setProduct({}));
+
+                  // set customer & meta if you track them in Redux/local state
+                  if (payload.customer !== undefined) {
+                    dispatch(setCustomer(payload.customer ?? null));
+                  }
+                  if (payload.description !== undefined) {
+                    setDescription(payload.description ?? "");
+                  }
+                  if (payload.billPaymentType !== undefined) {
+                    setBillPaymentType(payload.billPaymentType ?? "");
+                  }
+                  if (payload.dueDate !== undefined) {
+                    setDueDate(payload.dueDate ?? "");
+                  }
+                  if (payload.extraItems !== undefined) {
+                    dispatch(setExtraProducts(payload.extraItems ?? []));
+                  }
+
+                  alert(`Quotation "${q.name}" loaded into invoice ✅`);
+                }}
+              />
+            </div>
+
+          }
+
+
 
           <Input
             label='Discount %:'
@@ -1045,7 +1152,7 @@ const InvoiceComponent = () => {
 
             <Button
               className={`w-40 px-4 ${billType === 'thermal' ? 'hover:bg-green-800' : 'hover:bg-gray-700'}`}
-              bgColor={billType === 'thermal' ? 'bg-green-600' : A4Color.a4500}
+              bgColor={billType === 'thermal' ? 'bg-green-600' : 'bg-primary'}
               onClick={generateInvoice}
             >
               <p className='text-xs text-white'>Generate Invoice</p>
@@ -1056,9 +1163,9 @@ const InvoiceComponent = () => {
 
         {/* Search Result Table */}
         {searchQuery && (
-          <div className="mt-2 -ml-2 overflow-auto absolute w-[81%] max-h-72 overflow-y-auto   scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 z-20">
+          <div className="mt-2 -ml-2 overflow-auto absolute w-[81%] max-h-72 overflow-y-auto bg-white   scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 z-20">
             <table className={`min-w-full ${billType === 'thermal' ? thermalColor.th200 : A4Color.a4200} border text-xs`}>
-              <thead className={`${billType === 'thermal' ? thermalColor.th300 : A4Color.a4300} sticky -top-0  border-b shadow-sm z-10`}>
+              <thead className={`bg-primary sticky -top-0 text-white  border-b shadow-sm z-10`}>
                 <tr>
                   <th className="py-2 px-1 text-left">Code</th>
                   <th className="py-2 px-1 text-left">Name</th>
@@ -1111,9 +1218,7 @@ const InvoiceComponent = () => {
       <div>
         <div className="overflow-auto  max-h-40 scrollbar-thin" ref={tableContainerRef}>
           <table className="min-w-full bg-white border text-xs ">
-            <thead className={`${billType === 'thermal' ?
-              thermalColor.th300 :
-              A4Color.a4300} sticky -top-0  border-b shadow-sm z-10`}>
+            <thead className={`bg-primary/80 sticky text-white -top-0  border-b shadow-sm z-10`}>
               <tr className={` border-b`}>
                 <th className="py-2 px-1 text-left">S No</th>
                 <th className="py-2 px-1 text-left">Name</th>
@@ -1132,7 +1237,7 @@ const InvoiceComponent = () => {
                 const netAmount = (grossAmount * (1 - item.discount / 100)).toFixed(2);
 
                 return (
-                  <tr key={index} className={`border-t ${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100}`}>
+                  <tr key={index} className={`border-t bg-primary/20`}>
                     <td className=" px-1">{index + 1}</td>
                     <td className=" px-1">{item.productName}</td>
                     <td className=" px-1 flex items-start">
@@ -1168,8 +1273,14 @@ const InvoiceComponent = () => {
                       <input
                         type="text"
                         className={`p-1 rounded w-16 text-xs ${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100} bg-white`}
-                        value={(item.salePrice1).toFixed(2) || ''}
-                        onChange={(e) => handleItemChange(index, "salePrice1", parseFloat(e.target.value))}
+                        value={
+                          typeof item.salePrice1 === "number" && !isNaN(item.salePrice1)
+                            ? item.salePrice1.toFixed(2)
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleItemChange(index, "salePrice1", parseFloat(e.target.value) || 0)
+                        }
                       />
                     </td>
                     <td className=" px-1">{grossAmount.toFixed(2)}</td>
@@ -1200,7 +1311,7 @@ const InvoiceComponent = () => {
                 const netAmount = (grossAmount).toFixed(2);
 
                 return (
-                  <tr key={index} className={`border-t ${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100}`}>
+                  <tr key={index} className={`border-t bg-primary/20`}>
                     <td className=" px-1">{selectedItems.length + index + 1}</td>
                     <td className=" px-1">{item.itemName}</td>
                     <td className=" px-1">{item.quantity}</td>
@@ -1230,7 +1341,7 @@ const InvoiceComponent = () => {
 
 
       {/* Totals Section */}
-      <div className={`mt-4 p-2 border-t border-gray-300 ${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100}`}>
+      <div className={`mt-4 p-2 border-t border-gray-300 bg-primary/30`}>
         <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="col-span-1">
 

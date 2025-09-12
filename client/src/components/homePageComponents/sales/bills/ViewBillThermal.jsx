@@ -133,11 +133,11 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
                 </div> */}
 
                 {/* Footer Section */}
-                {exemptedParagraph &&
+                {/* {exemptedParagraph &&
                     <div className="text-center mt-3 text-xs font-semibold ">
                         {exemptedParagraph}
                     </div>
-                }
+                } */}
 
                 {bill?.billNo && (
                     <div className="w-full flex justify-center mt-1">
