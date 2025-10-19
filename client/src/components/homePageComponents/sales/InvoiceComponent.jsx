@@ -252,6 +252,7 @@ const InvoiceComponent = () => {
 
         dispatch(setSelectedItems([...selectedItems, newProduct]));
         console.log('updatedItems', selectedItems);
+        inputRef.current?.focus();
       }
 
       // Reset input fields
@@ -696,6 +697,66 @@ const InvoiceComponent = () => {
   }
 
 
+
+  const handleBarcodeEntry = (barcode) => {
+    const trimmedBarcode = barcode.toLowerCase().trim();
+    if (!trimmedBarcode) return;
+
+    // Match all products with same barcode
+    const matchedProducts = allProducts.filter(
+      (product) => product.productCode?.toLowerCase() === trimmedBarcode
+    );
+
+    if (matchedProducts.length === 1) {
+      // ✅ Only one product found
+      const product = matchedProducts[0];
+      const newProduct = {
+        ...product,
+        maxQuantity: product.productTotalQuantity,
+      };
+
+      handleSelectProduct(newProduct);
+      setTimeout(() => {
+        handleAddProduct();
+        inputRef.current?.focus();
+      }, 100);
+      dispatch(setSearchQuery(''));
+    } else if (matchedProducts.length > 1) {
+      // ⚠️ Multiple products with same barcode — show them
+      dispatch(setSearchQueryProducts(matchedProducts));
+      inputRef.current?.focus();
+    } else {
+      // ❌ No product found
+      alert('No product found for this barcode');
+      inputRef.current?.focus();
+    }
+  };
+
+
+  useEffect(() => {
+    let barcode = '';
+    let timeout;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        handleBarcodeEntry(barcode);
+        barcode = '';
+        return;
+      }
+
+      barcode += e.key;
+
+      clearTimeout(timeout);
+      timeout = setTimeout(() => (barcode = ''), 300);
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, []);
+
+
+
+
   useEffect(() => {
 
     fetchLastBillNo(billType)
@@ -779,7 +840,7 @@ const InvoiceComponent = () => {
   useEffect(() => {
     if (selectedCustomer === 'add') {
       setShowAddCustomer(true);
-      setSelectedCustomer(''); // reset to avoid re-triggering modal
+      setSelectedCustomer('');
     }
   }, [selectedCustomer]);
 
@@ -1040,25 +1101,7 @@ const InvoiceComponent = () => {
             ref={inputRef}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                const product = allProducts.find(
-                  (product) =>
-                    product.productCode?.toLowerCase() === searchQuery.toLowerCase() ||
-                    product.productName?.toLowerCase() === searchQuery.toLowerCase()
-                );
-
-                if (product) {
-                  const newProduct = {
-                    ...product,
-                    maxQuantity: product.productTotalQuantity
-                  }
-                  console.log('product', newProduct)
-                  handleSelectProduct(newProduct);
-                  setTimeout(() => {
-                    handleAddProduct();
-                  }, 100);
-                }
-
-                dispatch(setSearchQuery(''));
+                handleBarcodeEntry(searchQuery);
               }
             }}
           />
