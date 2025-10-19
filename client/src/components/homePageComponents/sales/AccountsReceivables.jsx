@@ -56,11 +56,19 @@ const AccountReceivables = () => {
   const fetchReceivables = async () => {
     try {
       const response = await config.getAccountReceivables();
-      if (response.data.length > 0) {
-        const data = response.data
+      // console.log('response', response)
+      if (response) {
+        const data = response.accountReceivables
+        // console.log('data', data)
         setReceivables(data);
 
-        const total = data.reduce(
+        const billsWithoutPosted = data.filter(
+          (item) => item.bill.isPosted !== true
+        );
+
+        console.log('billsWithoutPosted', billsWithoutPosted.length)
+
+        const total = billsWithoutPosted.reduce(
           (sum, item) => sum + ((item?.bill?.totalAmount - item?.bill?.paidAmount - item?.bill?.flatDiscount) || 0),
           0
         );
@@ -195,15 +203,20 @@ const AccountReceivables = () => {
                     <td className="py-2 px-2 text-center">
                       {receivable.customer?.customerRegion || 'N/A'}
                     </td>
-                    <td className="py-1 px-2 text-center">
+                    <td className="py-1 px-2 text-center ">
                       <button
-                        className="hover:bg-green-600 border border-green-600 text-green-600 hover:text-white py-1 px-2 rounded-full"
-                        onClick={() => handleBillPayment(receivable.bill.billNo)}
+                        className="hover:bg-green-600 border border-green-600 text-green-600 hover:text-white py-1 px-2 rounded-full "
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBillPayment(receivable.bill.billNo)
+                        }
+                        }
                       >Add Payment</button>
                       <span> </span>
                       <button
                         className="hover:bg-red-600 border border-red-600 text-red-600 hover:text-white py-1 px-2 rounded-full"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setBill(receivable.bill)
                           setIsConfirmationOpen(true)
                         }}

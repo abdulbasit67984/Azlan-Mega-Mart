@@ -13,6 +13,7 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
     const packingSlip = props.packingSlip
     const previousBalance = props.previousBalance
     const showPreviousBalance = props.showPreviousBalance
+    const showExemptedParagraph = props.exemptedParagraph
     // console.log(exemptedParagraph)
 
 
@@ -66,14 +67,13 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
                                     <td className="p-1">{commonFunction.truncateString(item.productId.productName, 21)}</td>
                                     <td className="p-1 text-center pl-8">
                                         <div>
-                                            {(item.quantity + item.billItemUnit / item.billItemPack) < 1 ? (item.billItemUnit) : (item.quantity + item.billItemUnit / item.billItemPack) }
-                                            <span> {(item.quantity + item.billItemUnit / item.billItemPack) < 1 ? (item.productId.packUnit)?.toUpperCase() || 'PCS' : (item.productId.quantityUnit)?.toUpperCase() || 'PCS' }</span>
+                                            {((item.quantity + item.billItemUnit / item.billItemPack) < 1 || item.quantity === 0) ? (item.billItemUnit) : (item.quantity + item.billItemUnit / item.billItemPack)?.toFixed(2) }
+                                            <span> {((item.quantity + item.billItemUnit / item.billItemPack) < 1 || item.quantity === 0) ? (item.productId.packUnit)?.toUpperCase() || 'PCS' : (item.productId.quantityUnit)?.toUpperCase() || 'PCS' }</span>
                                         </div>
                                     </td>
                                     {!packingSlip && 
                                     <td className="p-1 text-right">
-                                        {(item.quantity + item.billItemUnit / item.billItemPack) < 1 ? commonFunction.formatAsianNumber(((item.quantity + item.billItemUnit / item.billItemPack) * item.billItemPrice) -
-                                            (((item.quantity + item.billItemUnit / item.billItemPack) * item.billItemPrice) * item.billItemDiscount / 100)) : commonFunction.formatAsianNumber(item.billItemPrice)}
+                                        {((item.quantity + item.billItemUnit / item.billItemPack) < 1 || item.quantity === 0) ? commonFunction.formatAsianNumber(item.billItemPrice / item.billItemPack) : commonFunction.formatAsianNumber(item.billItemPrice)}
                                     </td>
                                     }
                                     {!packingSlip && <td className="p-1 text-right">
@@ -133,11 +133,11 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
                 </div> */}
 
                 {/* Footer Section */}
-                {/* {exemptedParagraph &&
+                {showExemptedParagraph &&
                     <div className="text-center mt-3 text-xs font-semibold ">
                         {exemptedParagraph}
                     </div>
-                } */}
+                }
 
                 {bill?.billNo && (
                     <div className="w-full flex justify-center mt-1">
@@ -152,6 +152,8 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
                         </div>
                     </div>
                 )}
+
+                <p className=' text-center text-xs'>Thank You For Shopping!</p>
 
                 <div className='flex justify-center mt-2'>
                     <img src={thermalLogo} className='h-10' alt="Pandas" />

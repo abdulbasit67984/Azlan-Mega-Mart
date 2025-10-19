@@ -24,6 +24,15 @@ const StockSearch = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [deleteId, setDeleteId] = useState('');
 
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedType, setSelectedType] = useState('');
+    const [selectedCompany, setSelectedCompany] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('');
+    const [hasDiscount, setHasDiscount] = useState('');
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+
+
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 400;
@@ -40,6 +49,7 @@ const StockSearch = () => {
 
     const allProducts = useSelector(state => state.saleItems.allProducts);
     const companyData = useSelector(state => state.companies.companyData);
+    const supplierData = useSelector(state => state.suppliers.supplierData);
     const categoryData = useSelector(state => state.categories.categoryData);
     const typeData = useSelector(state => state.types.typeData);
 
@@ -146,17 +156,75 @@ const StockSearch = () => {
     }, []);
 
     useEffect(() => {
-        let results = allProducts;
+        let results = allProducts || [];
+
         if (searchQuery) {
-            results = allProducts?.filter(
-                (product) =>
-                    product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    product.productCode?.toLowerCase().includes(searchQuery.toLowerCase())
+            results = results.filter(
+                (p) =>
+                    p.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.productCode?.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
+
+        if (selectedCategory) {
+            results = results.filter(
+                (p) => p.categoryDetails[0]?.categoryName === selectedCategory
+            );
+        }
+
+        if (selectedType) {
+            results = results.filter(
+                (p) => p.typeDetails[0]?.typeName === selectedType
+            );
+        }
+
+        if (selectedCompany) {
+            results = results.filter(
+                (p) => p.vendorSupplierDetails[0]?.supplierName === selectedCompany
+            );
+        }
+
+        if (selectedStatus) {
+            if (selectedStatus === "Out of Stock") {
+                results = results.filter((p) => p.productTotalQuantity <= 0);
+            } else {
+                results = results.filter((p) => p.status === selectedStatus);
+            }
+        }
+
+        if (hasDiscount) {
+            if (hasDiscount === "with") {
+                results = results.filter((p) => Number(p.productDiscountPercentage) > 0);
+            } else {
+                results = results.filter((p) => !p.productDiscountPercentage || Number(p.productDiscountPercentage) === 0);
+            }
+        }
+
+        if (minPrice || maxPrice) {
+            results = results.filter((p) => {
+                const price = Number(p.salePriceDetails?.[0]?.salePrice1 || 0);
+                return (
+                    (!minPrice || price >= Number(minPrice)) &&
+                    (!maxPrice || price <= Number(maxPrice))
+                );
+            });
+        }
+        console.log('results', results)
+
         setFilteredProducts(results);
         setCurrentPage(1);
-    }, [searchQuery, allProducts]);
+    }, [
+        searchQuery,
+        selectedCategory,
+        selectedType,
+        selectedCompany,
+        selectedStatus,
+        hasDiscount,
+        minPrice,
+        maxPrice,
+        allProducts
+    ]);
+
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -167,7 +235,7 @@ const StockSearch = () => {
             "Code", "Name", "Type", "Pack", "Company", "Vendor", "product Discount Percentage", "Category", "product Purchase Price", "Sale Price1", "Sale Price2", "Sale Price3", "Sale Price4", "Total Qty", "status"
         ];
 
-        const rows = currentProducts.map(product => [
+        const rows = allProducts?.map(product => [
             product.productCode,
             product.productName,
             product.typeDetails[0]?.typeName,
@@ -200,7 +268,7 @@ const StockSearch = () => {
 
     return !isEdit ? (
         <div className='bg-white rounded-lg'>
-            <div className="w-full px-5 py-5">
+            <div className="w-full px-5 py-">
                 <h2 className="text-lg text-center pt-2 font-semibold mb-2">Search for Stock</h2>
                 <div className="text-xs text-red-500 mb-2 text-center">
                     {error && <p>{error}</p>}
@@ -217,6 +285,77 @@ const StockSearch = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         ref={inputRef}
                     />
+                    <div className="flex flex-wrap gap-3 my-3 items-center text-xs">
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="border p-1 rounded"
+                        >
+                            <option value="">All Categories</option>
+                            {categoryData?.map((cat) => (
+                                <option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                            className="border p-1 rounded"
+                        >
+                            <option value="">All Types</option>
+                            {typeData?.map((type) => (
+                                <option key={type._id} value={type.typeName}>{type.typeName}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedCompany}
+                            onChange={(e) => setSelectedCompany(e.target.value)}
+                            className="border p-1 rounded"
+                        >
+                            <option value="">All Suppliers</option>
+                            {supplierData?.map((com) => (
+                                <option key={com._id} value={com.supplierName}>{com.supplierName}</option>
+                            ))}
+                        </select>
+
+
+                        <div className="flex items-center gap-1">
+                            <label>Price:</label>
+                            <input
+                                type="number"
+                                placeholder="Min"
+                                value={minPrice}
+                                onChange={(e) => setMinPrice(e.target.value)}
+                                className="w-16 border p-1 rounded"
+                            />
+                            <span>-</span>
+                            <input
+                                type="number"
+                                placeholder="Max"
+                                value={maxPrice}
+                                onChange={(e) => setMaxPrice(e.target.value)}
+                                className="w-16 border p-1 rounded"
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                setSelectedCategory('');
+                                setSelectedType('');
+                                setSelectedCompany('');
+                                setSelectedStatus('');
+                                setHasDiscount('');
+                                setMinPrice('');
+                                setMaxPrice('');
+                                setSearchQuery('');
+                            }}
+                            className="text-xs text-white bg-red-500 hover:bg-red-400 px-2 py-1 rounded"
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
+
                     <button
                         onClick={exportToCSV}
                         className="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-xs"
@@ -238,7 +377,8 @@ const StockSearch = () => {
                                     <th className="py-2 px-1 text-left">Category</th>
                                     <th className="py-2 px-1 text-left">Sale Price</th>
                                     <th className="py-2 px-1 text-left">Total Qty</th>
-                                    <th className="py-2 px-1 text-left"></th>
+                                    <th className="py-2 px-1 text-left">Total Units</th>
+                                    <th className="py-2 px-1 text-left">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -250,9 +390,10 @@ const StockSearch = () => {
                                         <td className="px-1 py-1">{product.productPack}</td>
                                         <td className="px-1 py-1">{product.companyDetails[0]?.companyName}</td>
                                         <td className="px-1 py-1">{product.vendorSupplierDetails[0]?.supplierName || product.vendorCompanyDetails[0]?.companyName}</td>
-                                        <td className="px-1 py-1">{product.categoryDetails[0]?.productName}</td>
+                                        <td className="px-1 py-1">{product.categoryDetails[0]?.categoryName}</td>
                                         <td className="px-1 py-1">{product.salePriceDetails[0]?.salePrice1}</td>
                                         <td className="px-1 py-1">{Math.ceil(product.productTotalQuantity / product.productPack)}</td>
+                                        <td className="px-1 py-1">{Math.ceil(product.productTotalQuantity)}</td>
                                         <td className="py-1 px-2 flex gap-2">
                                             <button
                                                 className="bg-red-500 hover:bg-red-700 text-white py-1 px-2 rounded-full"
@@ -473,7 +614,6 @@ const StockSearch = () => {
                                     <label className="block text-gray-700 text-xs">Purchase Price</label>
                                     <input
                                         type="text"
-                                        readOnly
                                         {...register('productPurchasePrice')}
                                         className="w-full px-2 py-1 border rounded-md text-xs"
                                     />
@@ -492,7 +632,7 @@ const StockSearch = () => {
                                     <div className=''>
                                         <select name="" id="" className='px-2 py-1 text-xs'
                                             {...register('quantityUnit')}>
-                                            {['pcs', 'pack', 'kg', 'ton', 'meter', 'yard', 'ft'].map((unit, i) => (
+                                            {['pcs', 'cotton', 'box', 'pack', 'kg', 'ton', 'meter', 'yard', 'ft'].map((unit, i) => (
                                                 <option key={i} value={unit}>{unit.toUpperCase()}</option>
                                             ))}
                                         </select>

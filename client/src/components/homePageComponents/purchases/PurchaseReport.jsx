@@ -136,7 +136,7 @@ function PurchaseReport() {
     <ViewPurchase
       bill={bill}
       isOpen={isBillOpen}
-      onClose={() => setIsBillOpen(!isBillOpen)}
+      onClose={() => setIsBillOpen(false)}
     />
   ) : isLoading ? (
     <Loader h_w="h-16 w-16 border-b-4 border-t-4" message="Loading Purchases...." />

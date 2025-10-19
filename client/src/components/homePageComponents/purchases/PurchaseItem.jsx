@@ -22,7 +22,6 @@ import { setAllProducts } from "../../../store/slices/products/productsSlice"
 import Input from "../../Input";
 import Button from "../../Button";
 import Loader from "../../../pages/Loader";
-import ButtonLoader from "../../ButtonLoader";
 
 const PurchaseItem = () => {
   const dispatch = useDispatch();
@@ -430,12 +429,8 @@ const PurchaseItem = () => {
 
               <Button
                 onClick={() => { handleGenerateBill() }}
-                className='p-1 px-2 w-20'
-              >
-                {isLoading ? 
-                <ButtonLoader />
-              : 'Add Bill'}
-              </Button>
+                className='p-1 px-4'
+              >Add</Button>
             </div>
           ) : (
             // New Product Fields
