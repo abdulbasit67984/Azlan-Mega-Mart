@@ -1124,6 +1124,7 @@ const InvoiceComponent = () => {
                 totalAmount={totalAmount}
                 billType={billType}
                 billPaymentType={billPaymentType}
+                flatDiscount={flatDiscount}
               />
             </div>
           </div>
