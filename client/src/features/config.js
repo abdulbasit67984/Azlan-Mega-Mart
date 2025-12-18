@@ -666,6 +666,27 @@ export class Config {
         }
     }
 
+    async deleteCustomer(customerId) {
+        try {
+            const response = await this.client.delete(`/store/delete-customer/${customerId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authService.getAccessToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response) {
+                console.log("Delete Response:", response.data);
+                return response.data;
+            }
+        } catch (error) {
+            console.log("Failed Deleting Customer:", error);
+            throw error;
+        }
+    }
+
     async addSupplier({ ...data }) {
         console.log(data)
         try {
@@ -797,25 +818,25 @@ export class Config {
             console.log("Failed updating Product:", error)
         }
     }
-   async getReports(params) {
-    console.log(params);
-    try {
-        const response = await this.client.get('/product/get-report', {
-            headers: {
-                Authorization: `Bearer ${authService.getAccessToken()}`,
-                'Content-Type': 'application/json'
-            },
-            params // ✅ this attaches your query params to the request
-        });
+    async getReports(params) {
+        console.log(params);
+        try {
+            const response = await this.client.get('/product/get-report', {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                    'Content-Type': 'application/json'
+                },
+                params // ✅ this attaches your query params to the request
+            });
 
-        if (response.data) {
-            console.log("config Res: ", response.data);
-            return response.data;
+            if (response.data) {
+                console.log("config Res: ", response.data);
+                return response.data;
+            }
+        } catch (error) {
+            console.log("Failed getting reports:", error);
         }
-    } catch (error) {
-        console.log("Failed getting reports:", error);
     }
-}
 
     async billPayment({ ...data }) {
         try {
@@ -1365,7 +1386,30 @@ export class Config {
             throw error;
         }
     }
+
+    async getDailyReports(dateRange) {
+        try {
+            const response = await this.client.get(`/reports/daily-reports?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            console.log('response', response)
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error getting daily reports:", error);
+            throw error;
+        }
+    }
+
+
+
 }
+
 const config = new Config();
 
 
