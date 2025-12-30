@@ -1083,7 +1083,37 @@ const InvoiceComponent = () => {
             value={searchQuery || ''}
             onChange={(e) => dispatch(setSearchQuery(e.target.value))}
             ref={inputRef}
-            onKeyDown={onKeyDownHandler}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                // Clear the previous timeout (debounce)
+                clearTimeout(timeoutId);
+
+                  const product = allProducts.find(
+                    (product) =>
+                      product.productCode?.toLowerCase() === searchQuery.toLowerCase() ||
+                      product.productName?.toLowerCase() === searchQuery.toLowerCase()
+                  );
+
+                  if (product) {
+                    const newProduct = {
+                      ...product,
+                      maxQuantity: product.productTotalQuantity,
+                    };
+                    console.log('product', newProduct);
+                    handleSelectProduct(newProduct);
+                    setTimeout(() => {
+                      handleAddProduct();
+                    }, 100);
+                  } else {
+                    alert('No product found for this barcode');
+                  }
+
+                  dispatch(setSearchQuery(''));
+
+                // Save the timeoutId to clear it later if another key is pressed before 500ms
+                setTimeoutId(newTimeoutId);
+              }
+            }}
           />
 
           <Input
