@@ -79,6 +79,8 @@ const InvoiceComponent = () => {
 
   const [showAddCustomer, setShowAddCustomer] = useState(false)
 
+  const [timeoutId, setTimeoutId] = useState(null);
+
   const [showAddExtraProductModal, setShowAddExtraProductModal] = useState(false);
   const [extraProduct, setExtraProduct] = useState({
     id: 0,
@@ -252,7 +254,6 @@ const InvoiceComponent = () => {
 
         dispatch(setSelectedItems([...selectedItems, newProduct]));
         console.log('updatedItems', selectedItems);
-        inputRef.current?.focus();
       }
 
       // Reset input fields
@@ -646,6 +647,41 @@ const InvoiceComponent = () => {
 
   };
 
+  const onKeyDownHandler = (e) => {
+    if (e.key === 'Enter') {
+      // Clear the previous timeout (debounce)
+      clearTimeout(timeoutId);
+
+      // Set a new timeout to execute the search logic after 500ms
+      const newTimeoutId = setTimeout(() => {
+        const product = allProducts.find(
+          (product) =>
+            product.productCode?.toLowerCase() === searchQuery.toLowerCase() ||
+            product.productName?.toLowerCase() === searchQuery.toLowerCase()
+        );
+
+        if (product) {
+          const newProduct = {
+            ...product,
+            maxQuantity: product.productTotalQuantity,
+          };
+          console.log('product', newProduct);
+          handleSelectProduct(newProduct);
+          setTimeout(() => {
+            handleAddProduct();
+          }, 100);
+        } else {
+          alert('No product found for this barcode');
+        }
+
+        dispatch(setSearchQuery(''));
+      }, 500); // 500ms debounce delay
+
+      // Save the timeoutId to clear it later if another key is pressed before 500ms
+      setTimeoutId(newTimeoutId);
+    }
+  };
+
   useEffect(() => {
     if (bill) {
       handleDirectPrint();
@@ -695,66 +731,6 @@ const InvoiceComponent = () => {
       setIsLoading(false)
     }
   }
-
-
-
-  const handleBarcodeEntry = (barcode) => {
-    const trimmedBarcode = barcode.toLowerCase().trim();
-    if (!trimmedBarcode) return;
-
-    // Match all products with same barcode
-    const matchedProducts = allProducts.filter(
-      (product) => product.productCode?.toLowerCase() === trimmedBarcode
-    );
-
-    if (matchedProducts.length === 1) {
-      // ✅ Only one product found
-      const product = matchedProducts[0];
-      const newProduct = {
-        ...product,
-        maxQuantity: product.productTotalQuantity,
-      };
-
-      handleSelectProduct(newProduct);
-      setTimeout(() => {
-        handleAddProduct();
-        inputRef.current?.focus();
-      }, 100);
-      dispatch(setSearchQuery(''));
-    } else if (matchedProducts.length > 1) {
-      // ⚠️ Multiple products with same barcode — show them
-      dispatch(setSearchQueryProducts(matchedProducts));
-      inputRef.current?.focus();
-    } else {
-      // ❌ No product found
-      alert('No product found for this barcode');
-      inputRef.current?.focus();
-    }
-  };
-
-
-  useEffect(() => {
-    let barcode = '';
-    let timeout;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter') {
-        handleBarcodeEntry(barcode);
-        barcode = '';
-        return;
-      }
-
-      barcode += e.key;
-
-      clearTimeout(timeout);
-      timeout = setTimeout(() => (barcode = ''), 300);
-    };
-
-    window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
-  }, []);
-
-
 
 
   useEffect(() => {
@@ -840,7 +816,7 @@ const InvoiceComponent = () => {
   useEffect(() => {
     if (selectedCustomer === 'add') {
       setShowAddCustomer(true);
-      setSelectedCustomer('');
+      setSelectedCustomer(''); // reset to avoid re-triggering modal
     }
   }, [selectedCustomer]);
 
@@ -1058,6 +1034,7 @@ const InvoiceComponent = () => {
                 const customer = customerData.find((c) => c._id === customerId);
                 setCustomerFlag(customer?.customerFlag); // Added optional chaining
                 // console.log('customerFlag', customer?.customerFlag); // Added optional chaining
+                document.title = customer.customerName || 'Sale Item'
               }}
               className={`${billType === 'thermal' ? thermalColor.th100 : A4Color.a4100} border p-1 rounded text-xs w-full`}
             >
@@ -1106,11 +1083,7 @@ const InvoiceComponent = () => {
             value={searchQuery || ''}
             onChange={(e) => dispatch(setSearchQuery(e.target.value))}
             ref={inputRef}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleBarcodeEntry(searchQuery);
-              }
-            }}
+            onKeyDown={onKeyDownHandler}
           />
 
           <Input
