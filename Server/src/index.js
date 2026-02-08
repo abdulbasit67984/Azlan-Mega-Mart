@@ -16,17 +16,17 @@ dotenv.config({
 const port = process.env.PORT || 8000
 connectDB()
 .then(() => {
-    // app.listen(
-    //     port, 
-    //     () => {
-    //         console.log(`server is running on ${port}`)
-    //         initWhatsapp();
-    //     }
-    // )
-    app.listen(port, '0.0.0.0', () => {
-        console.log(`server is running on ${port}`)
+    app.listen(
+        port, 
+        () => {
+            console.log(`server is running on ${port}`)
             // initWhatsapp();
-    })
+        }
+    )
+    // app.listen(port, '0.0.0.0', () => {
+    //     console.log(`server is running on ${port}`)
+    //         // initWhatsapp();
+    // })
 })
 .catch((error) => {
     console.log("DB connection error: " + error)
