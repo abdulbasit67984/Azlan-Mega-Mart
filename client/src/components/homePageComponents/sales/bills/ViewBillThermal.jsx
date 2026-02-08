@@ -4,7 +4,6 @@ import Logo from '../../../Logo';
 import commonFunction from '../../../../features/functions';
 import Barcode from 'react-barcode';
 import thermalLogo from '../../../../assets/thermalLogo.jpg'
-import paymentQR from '../../../../assets/paymentQR.jpeg'
 
 
 // ViewBill component wrapped in forwardRef
@@ -139,27 +138,22 @@ const ViewBillThermal = React.forwardRef((props, ref) => {
                         {exemptedParagraph}
                     </div>
                 }
-                <p className=' text-center text-xs mt-3'>Thank You For Shopping!</p>
-                <div className=''>
-                    <ul className='text-[9px] text-right'>
-                        <li className='flex flex-row-reverse gap-1 pt-1'>
-                            <span>&#8592;</span> کوئی بھی آئیٹم واپس یا تبدیل ہو سکتا ہے بشرطیکہ وہ اپنی اصلی حالت میں ہو اور مکمل پیکنگ میں ہو
-                        </li>
-                        <li className='flex flex-row-reverse gap-1 pt-1'>
-                            <span>&#8592;</span> کسی بھی آئٹم کی واپسی صرف بل یا رسید کی موجودگی میں ہی قابل قبول ہوگی
-                        </li>
-                        <li className='flex flex-row-reverse gap-1 pt-1'>
-                            <span>&#8592;</span> چائنہ آئیٹمز کی واپسی نہیں ہوگی
-                        </li>
-                        <li className='flex flex-row-reverse gap-1 pt-1'>
-                            <span>&#8592;</span> نوٹ : واپسی ۱ مہینہ  کے  اندر  قابل قبول ہو گی اس کے بعد نہیں ہو گی
-                        </li>
-                    </ul>
-                </div>
-                <div className="flex justify-center my-3">
-                    <img src={paymentQR} alt="" className=' h-32' />
-                </div>
 
+                {bill?.billNo && (
+                    <div className="w-full flex justify-center mt-1">
+                        <div className="w-2/3 flex justify-center">
+                            <Barcode
+                                value={bill.billNo}
+                                height={30}
+                                displayValue={false}
+                                width={1}
+                                background="#ffffff"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <p className=' text-center text-xs'>Thank You For Shopping!</p>
 
                 <div className='flex justify-center mt-2'>
                     <img src={thermalLogo} className='h-10' alt="Pandas" />

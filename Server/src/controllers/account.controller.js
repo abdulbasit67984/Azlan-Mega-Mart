@@ -831,7 +831,7 @@ Your transaction has been successfully recorded.
 
 _Powered by PANDAS Software_`;
 
-                    await sendWhatsappMessage(mobileNo, whatsappMessage);
+                    // await sendWhatsappMessage(mobileNo, whatsappMessage);
                 }
             }
 
@@ -988,7 +988,7 @@ Your transaction has been successfully recorded.
 
 _Powered by PANDAS Software_`;
 
-                    await sendWhatsappMessage(mobileNo, whatsappMessage);
+                    // await sendWhatsappMessage(mobileNo, whatsappMessage);
                 }
             }
 

@@ -333,11 +333,11 @@ const registerBill = asyncHandler(async (req, res) => {
             }
 
 
-            if (customer && mobileNo) {
-                await sendWhatsappMessage(mobileNo, `Thank you for choosing Mubarak Sanitary Traders! \nYour bill has been successfully created.
-                \n\n*Bill Details:*\nBill No: ${billNo}\nCustomer: ${customerDetails?.customerName}\nTotal Bill: ${totalAmount}\nFlat Discount: ${flatDiscount}\nPaid Amount: ${paidAmount}\n*Net Total:* ${totalAmount - flatDiscount - paidAmount}
-                \n\n_Powered by PANDAS Software_`);
-            }
+            // if (customer && mobileNo) {
+            //     await sendWhatsappMessage(mobileNo, `Thank you for choosing Mubarak Sanitary Traders! \nYour bill has been successfully created.
+            //     \n\n*Bill Details:*\nBill No: ${billNo}\nCustomer: ${customerDetails?.customerName}\nTotal Bill: ${totalAmount}\nFlat Discount: ${flatDiscount}\nPaid Amount: ${paidAmount}\n*Net Total:* ${totalAmount - flatDiscount - paidAmount}
+            //     \n\n_Powered by PANDAS Software_`);
+            // }
 
             // const test = true;
             // if(test){

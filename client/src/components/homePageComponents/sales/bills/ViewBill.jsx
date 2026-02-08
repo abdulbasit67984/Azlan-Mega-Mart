@@ -2,8 +2,8 @@
 import React from 'react';
 import Logo from '../../../Logo';
 import commonFunction from '../../../../features/functions';
-import billLogo from '../../../../assets/billLogo.jpeg'
-import paymentQR from '../../../../assets/paymentQR.jpeg'
+// import billLogo from '../../../../assets/billLogo.jpeg'
+// import paymentQR from '../../../../assets/paymentQR.jpeg'
 
 import billDesign from '../../../../assets/billDesign.svg'
 // import { useSelector } from 'react-redux';
@@ -30,7 +30,7 @@ const ViewBill = React.forwardRef((props, ref) => {
                 <div className="flex justify-center relative">
 
                     <div className=''>
-                        <img src={billLogo} alt="" className='w-40 ' />
+                        {/* <img src={billLogo} alt="" className='w-40 ' /> */}
                     </div>
 
                     <div className='text-center w-full z-20'>
@@ -185,8 +185,8 @@ const ViewBill = React.forwardRef((props, ref) => {
 
                 {!packingSlip &&
                     <div className='mt-3'>
-                        <p className='text-[12px] text-right'>  نوٹ:  کوئی بھی آئیٹم واپس یا تبدیل ہو سکتا ہے بشرطیکہ وہ اپنی اصلی حالت میں ہو اور مکمل پیکنگ میں ہو۔ چائنہ آئیٹمز کی واپسی نہیں ہوگی۔ کسی بھی آئٹم کی واپسی صرف بل یا رسید کی موجودگی میں ہی قابل قبول ہوگی۔ واپسی ۱ مہینہ  کے  اندر  قابل قبول ہو گی اس کے بعد نہیں ہو گی
-                        </p>
+                        {/* <p className='text-[12px] text-right'>  نوٹ:  کوئی بھی آئیٹم واپس یا تبدیل ہو سکتا ہے بشرطیکہ وہ اپنی اصلی حالت میں ہو اور مکمل پیکنگ میں ہو۔ چائنہ آئیٹمز کی واپسی نہیں ہوگی۔ کسی بھی آئٹم کی واپسی صرف بل یا رسید کی موجودگی میں ہی قابل قبول ہوگی۔ واپسی ۱ مہینہ  کے  اندر  قابل قبول ہو گی اس کے بعد نہیں ہو گی
+                        </p> */}
                     </div>
                 }
 
