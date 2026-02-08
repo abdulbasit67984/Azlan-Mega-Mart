@@ -17,6 +17,7 @@ import { setTypeData } from '../store/slices/products/typeSlice'
 import authService from "../features/auth";
 import { logout } from "../store/slices/auth/authSlice";
 import { setCurrentUser, setPrimayPath } from '../store/slices/auth/authSlice'
+import { showSuccessToast, showErrorToast } from '../utils/toast';
 
 
 function WelcomePage() {
@@ -146,8 +147,10 @@ function WelcomePage() {
                 console.log("types: ", response)
             }
             setSuccessMessage("Data Loaded Successfully...")
+            showSuccessToast("Data loaded successfully!")
         } catch (error) {
             setError(error.message)
+            showErrorToast(error.message || 'Failed to load data')
             if (error?.response.status === 401) {
                 navigate('/login')
             }

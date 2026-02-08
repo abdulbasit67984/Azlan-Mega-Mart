@@ -54,7 +54,7 @@ const registerSaleReturn = asyncHandler(async (req, res) => {
                 // Update product quantity in inventory
 
                 const originalProductQuantity = product.productTotalQuantity;
-                product.productTotalQuantity += quantity;
+                product.productTotalQuantity += Number(totalQuantity);
 
                 transaction.addOperation(
                     async () => await product.save(),

@@ -2,8 +2,10 @@
 import React from 'react';
 import Logo from '../../../Logo';
 import commonFunction from '../../../../features/functions';
-import billLogo from '../../../../assets/billLogo.jpg'
-import paymentQR from '../../../../assets/paymentQR.jpg'
+import billLogo from '../../../../assets/billLogo.jpeg'
+import paymentQR from '../../../../assets/paymentQR.jpeg'
+
+import billDesign from '../../../../assets/billDesign.svg'
 // import { useSelector } from 'react-redux';
 
 // ViewBill component wrapped in forwardRef
@@ -17,29 +19,35 @@ const ViewBill = React.forwardRef((props, ref) => {
 
     const exemptedParagraph = bill?.BusinessId?.exemptedParagraph
 
+    console.log(bill)
+    const businessName = bill?.BusinessId?.businessName;
+
     return bill && (
         <div className=' h-[28rem] shadow-lg overflow-y-auto scrollbar-thin'>
             <div ref={ref} className="view-bill p-4 pt-8 bg-white" >
                 {/* Business Information */}
-                <div className="flex justify-center">
+                
+                <div className="flex justify-center relative">
 
-                    <div className='ml-5'>
-                        <img src={billLogo} alt="" className='w-36' />
+                    <div className=''>
+                        <img src={billLogo} alt="" className='w-40 ' />
                     </div>
 
-                    <div className='text-center w-full'>
+                    <div className='text-center w-full z-20'>
                         <div className='flex pl-4'>
-                            
-                            <div className='flex items-end justify-center ml-5'>
-                                <span className='text-4xl font-extrabold pb-2 pr-2'>PARKO </span> <h2 className="text-xl font-bold pb-2"> ELECTRIC AND ELECTRONICS</h2>
-                                <span className='text-xs pb-6 pl-2'>RTM 294967</span>
+
+                            <div className='flex items-end justify-center '>
+                                <span className='text-4xl font-extrabold pb-2 pr-2'>{businessName?.split(' ')[0]} </span> <h2 className="text-xl font-bold pb-2"> {businessName?.split(' ').slice(1).join(' ')}</h2>
+
                             </div>
                         </div>
-                        <p className="text-sm ">{bill?.storeAddress}</p>
-                        <p className="text-sm text-left ml-10 "><span className='font-bold'>Phone</span> &#128382;: {bill?.BusinessId?.owner?.mobileno?.map((num, i) => <span className='px-1' key={i}>{num}</span>)} | <span className='font-bold'>Address</span> &#10003;: {bill?.BusinessId?.businessRegion}</p>
-                        <h3 className="text-xl font-bold mt-4 text-left ml-10">{packingSlip ? 'Packing Slip' : 'Sale Invoice'}</h3>
+                        {/* <p className="text-sm ">{bill?.storeAddress}</p> */}
+                        <p className="text-xs text-left ml-4 "><span className='font-bold'>Phone</span> &#128382;: {bill?.BusinessId?.owner?.mobileno?.map((num, i) => <span className='px-1' key={i}>{num}</span>)} | <span className='font-bold'>Address</span> &#10003;: {bill?.BusinessId?.businessRegion}</p>
+                        <h3 className="text-xl font-bold mt-4 text-left ml-52">{packingSlip ? 'Packing Slip' : 'Sale Invoice'}</h3>
                     </div>
-                    <div></div>
+                    <div>
+                        <img className='absolute right-0 -bottom-5 h-32 z-10 ' src={billDesign} alt="" />
+                    </div>
                 </div>
 
                 <div className='w-full flex justify-center'><div className='border-b-2 my-5 w-4/5'></div></div>
@@ -109,7 +117,7 @@ const ViewBill = React.forwardRef((props, ref) => {
                                         </div>
                                     </td>
                                     <td className="text-xs p-2">
-                                        {item.billItemPack + " " + (item.productId?.packUnit?.toUpperCase() ||"PCS")}
+                                        {item.billItemPack + " " + (item.productId?.packUnit?.toUpperCase() || "PCS")}
                                     </td>
                                     {!packingSlip &&
                                         <td className="text-xs p-2">
@@ -175,6 +183,13 @@ const ViewBill = React.forwardRef((props, ref) => {
                     </div>
                 }
 
+                {!packingSlip &&
+                    <div className='mt-3'>
+                        <p className='text-[12px] text-right'>  نوٹ:  کوئی بھی آئیٹم واپس یا تبدیل ہو سکتا ہے بشرطیکہ وہ اپنی اصلی حالت میں ہو اور مکمل پیکنگ میں ہو۔ چائنہ آئیٹمز کی واپسی نہیں ہوگی۔ کسی بھی آئٹم کی واپسی صرف بل یا رسید کی موجودگی میں ہی قابل قبول ہوگی۔ واپسی ۱ مہینہ  کے  اندر  قابل قبول ہو گی اس کے بعد نہیں ہو گی
+                        </p>
+                    </div>
+                }
+
                 {/* Signature Section */}
                 <div className=''>
                     {showExemptedParagraph &&
@@ -182,12 +197,12 @@ const ViewBill = React.forwardRef((props, ref) => {
                             {exemptedParagraph}
                         </div>
                     }
-                    <div className='flex items-end justify-end gap-20'>
-                        <p className='text-center text-[10px]'>Software by Pandas. 📞 03103480229 🌐 www.pandas.com.pk</p>
-                        <div className="text-right mt-16 mr-24">
+                    <div className='flex items-center justify-end'>
+                        <p className='text-center text-[10px]'>Software by Pandas. 🌐 www.pandas.com.pk</p>
+                        {/* <div className="text-right mt-16 mr-24">
                             <p>____________________________</p>
                             <p className='mr-4'>Signature & Stamp</p>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

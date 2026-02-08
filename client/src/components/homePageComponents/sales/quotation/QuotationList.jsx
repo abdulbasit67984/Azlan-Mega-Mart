@@ -9,6 +9,9 @@ import {
     clearQuotations,
 } from "../../../../utils/quotationStorage";
 import Button from "../../../Button";
+import { useSelector } from "react-redux";
+import { showWarningToast, showSuccessToast } from "../../../../utils/toast";
+import ConfirmationModal from "../../../ConfirmationModal";
 
 export default function QuotationList({ onLoadQuotation, onClose }) {
     const [quotations, setQuotations] = useState([]);
@@ -16,8 +19,17 @@ export default function QuotationList({ onLoadQuotation, onClose }) {
     const [selected, setSelected] = useState(new Set());
     const [preview, setPreview] = useState(null); // quotation to preview
 
+    // Confirmation modal states
+    const [showDeleteOneConfirm, setShowDeleteOneConfirm] = useState(false);
+    const [quotationToDelete, setQuotationToDelete] = useState(null);
+    const [showDeleteSelectedConfirm, setShowDeleteSelectedConfirm] = useState(false);
+    const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+
     const previewRef = useRef(); // for printing preview
     const listRef = useRef();    // optional: for printing list
+
+    const userData = useSelector((state) => state.auth.userData);
+    // console.log('userData in QuotationList:', userData);
 
     // react-to-print hook
     const handlePrintPreview = useReactToPrint({
@@ -62,32 +74,49 @@ export default function QuotationList({ onLoadQuotation, onClose }) {
     };
 
     const handleDeleteOne = (id) => {
-        if (!window.confirm("Delete this quotation?")) return;
-        const next = deleteQuotation(id);
+        setQuotationToDelete(id);
+        setShowDeleteOneConfirm(true);
+    };
+
+    const confirmDeleteOne = () => {
+        const next = deleteQuotation(quotationToDelete);
         setQuotations(next);
         setSelected((s) => {
             const t = new Set(s);
-            t.delete(String(id));
+            t.delete(String(quotationToDelete));
             return t;
         });
+        setShowDeleteOneConfirm(false);
+        setQuotationToDelete(null);
+        showSuccessToast('Quotation deleted successfully!');
     };
 
     const handleDeleteSelected = () => {
         if (selected.size === 0) {
-            alert("No quotations selected.");
+            showWarningToast("No quotations selected.");
             return;
         }
-        if (!window.confirm(`Delete ${selected.size} selected quotation(s)?`)) return;
+        setShowDeleteSelectedConfirm(true);
+    };
+
+    const confirmDeleteSelected = () => {
         const next = deleteQuotations(Array.from(selected));
         setQuotations(next);
         setSelected(new Set());
+        setShowDeleteSelectedConfirm(false);
+        showSuccessToast(`${selected.size} quotation(s) deleted successfully!`);
     };
 
     const handleClearAll = () => {
-        if (!window.confirm("Delete ALL quotations? This cannot be undone.")) return;
+        setShowClearAllConfirm(true);
+    };
+
+    const confirmClearAll = () => {
         clearQuotations();
         setQuotations([]);
         setSelected(new Set());
+        setShowClearAllConfirm(false);
+        showSuccessToast('All quotations cleared successfully!');
     };
 
     const handleLoad = (q) => {
@@ -237,7 +266,7 @@ export default function QuotationList({ onLoadQuotation, onClose }) {
                         </button>
                         <div ref={previewRef} >
                             <h4 className="text-base font-semibold mb-3">
-                                PARKO ELECTRIC AND ELECTRONICS
+                                {userData?.BusinessId?.businessName}
                             </h4>
 
                             <div className="grid grid-cols-2 gap-3 text-[12px] mb-4">
@@ -342,6 +371,42 @@ export default function QuotationList({ onLoadQuotation, onClose }) {
                     </div>
                 </div>
             )}
+
+            {/* Delete One Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteOneConfirm}
+                onConfirm={confirmDeleteOne}
+                onCancel={() => {
+                    setShowDeleteOneConfirm(false);
+                    setQuotationToDelete(null);
+                }}
+                title="Delete Quotation"
+                message="Are you sure you want to delete this quotation? This action cannot be undone."
+                type="delete"
+                confirmText="Delete"
+            />
+
+            {/* Delete Selected Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteSelectedConfirm}
+                onConfirm={confirmDeleteSelected}
+                onCancel={() => setShowDeleteSelectedConfirm(false)}
+                title="Delete Selected Quotations"
+                message={`Are you sure you want to delete ${selected.size} selected quotation(s)? This action cannot be undone.`}
+                type="delete"
+                confirmText="Delete All"
+            />
+
+            {/* Clear All Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showClearAllConfirm}
+                onConfirm={confirmClearAll}
+                onCancel={() => setShowClearAllConfirm(false)}
+                title="Clear All Quotations"
+                message="Are you sure you want to delete ALL quotations? This action cannot be undone."
+                type="warning"
+                confirmText="Clear All"
+            />
         </div>
     );
 }

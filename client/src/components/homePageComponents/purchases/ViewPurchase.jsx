@@ -1,14 +1,13 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react';
 import authService from '../../../features/auth';
-import Button from '../../Button';
 
-const ViewPurchase = ({bill, isOpen, onClose}) => {
+const ViewPurchase = (bill, isOpen, onClose) => {
     const [userData, setUserData] = useState({})
 
     const fetchUser = async () => {
         const response = await authService.getCurrentUser()
-        if (response) {
+        if(response){
             setUserData(response.data)
             console.log('response.data', response.data)
         }
@@ -19,22 +18,19 @@ const ViewPurchase = ({bill, isOpen, onClose}) => {
     }, [])
 
     if (!isOpen) return null;
-    const purchase = bill
+    const purchase = bill.bill;
+    console.log('purchase', purchase)
     return purchase && (
         <div className='h-[28rem] shadow-lg overflow-y-auto scrollbar-thin'>
             <div className="view-bill p-4 pt-8 bg-white">
                 {/* Business Information */}
-                <div className="flex justify-center  relative">
+                <div className="flex justify-center">
                     <div className='text-center'>
                         <h2 className="text-2xl font-bold pb-2">{userData?.BusinessId?.businessName}</h2>
                         <p className="text-sm">{userData?.BusinessId?.businessRegion}</p>
                         <p className="text-sm">Phone &#128382;: {userData.mobileno} | Email &#128231;: {userData.email}</p>
                         <h3 className="text-xl font-bold mt-4">Purchase Invoice</h3>
                     </div>
-                    <Button
-                        className='absolute right-5 px-2 py-1 '
-                        onClick={onClose}
-                    >Close</Button>
                 </div>
 
                 <div className='w-full flex justify-center'><div className='border-b-2 my-5 w-4/5'></div></div>
@@ -85,7 +81,7 @@ const ViewPurchase = ({bill, isOpen, onClose}) => {
                             {purchase.purchaseItems && purchase.purchaseItems.map((item, index) => (
                                 <tr key={index} className="break-inside-avoid">
                                     <td className="text-xs p-2">{index + 1}</td>
-                                    <td className="text-xs p-2">{item.productId.productName}</td>
+                                    <td className="text-xs p-2">{item.productId?.productName}</td>
                                     <td className="text-xs p-2">{item.quantity}</td>
                                     <td className="text-xs p-2">{item.pricePerUnit}</td>
                                     <td className="text-xs p-2">{item.quantity * item.pricePerUnit}</td>
@@ -102,7 +98,7 @@ const ViewPurchase = ({bill, isOpen, onClose}) => {
                     <div className="mb-4 w-72">
                         <p><span className='inline-block font-semibold w-44'>Total Gross Amount:</span> {(purchase.totalAmount).toFixed(2)}</p>
                         <p><span className='inline-block font-semibold w-44'>Discount Amount:</span> {(purchase.flatDiscount).toFixed(2)}</p>
-
+                       
                         <p><span className='inline-block font-semibold w-44'>Net Total:</span> {(purchase.totalAmount).toFixed(2)}</p>
                     </div>
                 </div>

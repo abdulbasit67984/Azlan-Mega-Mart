@@ -64,7 +64,7 @@ const iconMap = {
 }
 
 // ... Keep DropdownItem exactly as is ...
-const DropdownItem = ({ child, idx }) => {
+const DropdownItem = ({ child, idx, onSelect }) => {
   const [isChildHovered, setIsChildHovered] = useState(false)
   const ChildIcon = iconMap[child.name] || Box
   const isChildDisabled = !child.active
@@ -82,7 +82,10 @@ const DropdownItem = ({ child, idx }) => {
         onClick={(e) => {
           if (isChildDisabled) {
             e.preventDefault()
+            return
           }
+
+          onSelect?.(idx)
         }}
         className={({ isActive }) =>
           `
@@ -267,7 +270,17 @@ function Navbar({ data, currentUser }) {
                     >
                       <div className="p-2 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                         {item.Children.map((child, idx) => (
-                          <DropdownItem key={idx} child={child} idx={idx} />
+                          <DropdownItem
+                            key={idx}
+                            child={child}
+                            idx={idx}
+                            onSelect={(childIndex) => {
+                              dispatch(setNavItemCategoryData(item.Children))
+                              dispatch(setActiveFeatureIndex({ activeIndex: childIndex }))
+                              setOpenDropdown(null)
+                              setHoveredIndex(null)
+                            }}
+                          />
                         ))}
                       </div>
 

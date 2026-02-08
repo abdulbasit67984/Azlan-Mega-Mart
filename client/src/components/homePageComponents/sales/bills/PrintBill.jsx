@@ -16,7 +16,7 @@ const PrintBill = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [exemptedParagraph, setExemptedParagraph] = useState(false)
   const [packingSlip, setPackingSlip] = useState(false)
-  const [showPreviousBalance, setShowPreviousBalance] = useState(false)
+  const [showPreviousBalance, setShowPreviousBalance] = useState(true)
   const [previousBalance, setPreviousBalance] = useState(0)
   const [billType, setBillType] = useState('')
 

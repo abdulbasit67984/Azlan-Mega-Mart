@@ -86,11 +86,19 @@ ProductSchema.statics.allocatePurchasePrice = async function (productId, require
 
     // console.log('itemUnits', itemUnits)
     
-    const quantityWithUnits = requiredQuantity * billItemPack + itemUnits;
+    const quantityWithUnits = Number(requiredQuantity) * Number(billItemPack) + Number(itemUnits);
     let remainingRequiredQuantity = quantityWithUnits;
-    let totalCost = 0;
-    
-    const product = await this.findById(productId, 'productPack');
+
+    const product = await this.findById(productId, 'productPack productPurchasePrice');
+    if (!product) {
+        throw new Error(`Product not found for ID: ${productId}`);
+    }
+
+    const productPack = Number(product.productPack) || 1;
+    const purchasePrice = Number(product.productPurchasePrice) || 0;
+
+    // Calculate total purchase cost directly from the product's purchase price
+    let totalCost = (purchasePrice / productPack) * Number(quantityWithUnits) 
     // console.log('productPack', product.productPack)
 
     for (const record of statusRecords) {
@@ -100,7 +108,6 @@ ProductSchema.statics.allocatePurchasePrice = async function (productId, require
         // console.log('usedQuantity', usedQuantity)
         // console.log('statusRecords', statusRecords)
         
-        totalCost += usedQuantity * parseFloat(record.newPrice) / parseFloat(product.productPack);
         remainingRequiredQuantity -= usedQuantity;
         
         const originalRemainingQuantity = record.remainingQuantity;
@@ -117,24 +124,16 @@ ProductSchema.statics.allocatePurchasePrice = async function (productId, require
     }
 
     // Handle negative stock by creating a virtual negative entry
-    if (remainingRequiredQuantity > 0) {
-        const latestPrice = parseFloat(statusRecords[statusRecords.length - 1].newPrice)
-        // console.log('latestPrice', latestPrice)
-
-        const negativeCost = remainingRequiredQuantity * latestPrice / parseFloat(product.productPack);
-        totalCost += negativeCost;
-
-        // console.log('negativeCost', negativeCost)
-        // console.log('statusRecords[statusRecords.length - 1]', statusRecords[statusRecords.length - 1])
-
-        const originalRemainingQuantity = statusRecords[statusRecords.length - 1].remainingQuantity;
-        statusRecords[statusRecords.length - 1].remainingQuantity -= remainingRequiredQuantity
+    if (remainingRequiredQuantity > 0 && statusRecords.length > 0) {
+        const lastRecord = statusRecords[statusRecords.length - 1];
+        const originalRemainingQuantity = lastRecord.remainingQuantity;
+        lastRecord.remainingQuantity -= remainingRequiredQuantity;
 
         transaction.addOperation(
-            async () => await statusRecords[statusRecords.length - 1].save(),
+            async () => await lastRecord.save(),
             async () => {
-                statusRecords[statusRecords.length - 1].remainingQuantity = originalRemainingQuantity;
-                await statusRecords[statusRecords.length - 1].save();
+                lastRecord.remainingQuantity = originalRemainingQuantity;
+                await lastRecord.save();
             }
         );
     }
@@ -144,8 +143,6 @@ ProductSchema.statics.allocatePurchasePrice = async function (productId, require
 
 
 ProductSchema.statics.calculatePurchasePriceForReturn = async function (productId, returnedQuantity) {
-
-    
     const StatusOfPrice = mongoose.model('StatusOfPrice'); // Reference the StatusOfPrice model
 
     // Fetch the first relevant StatusOfPrice record with remainingQuantity > 0
@@ -161,20 +158,22 @@ ProductSchema.statics.calculatePurchasePriceForReturn = async function (productI
         }).sort({ createdAt: -1 });
     }
 
-    // console.log('returnedQuantity', returnedQuantity)
+    if (statusRecord) {
+        statusRecord.remainingQuantity += Number(returnedQuantity);
+        await statusRecord.save();
+    }
 
-    // Increment the remaining quantity of the first record
-    statusRecord.remainingQuantity += Number(returnedQuantity);
+    const product = await this.findById(productId, 'productPack productPurchasePrice');
+    if (!product) {
+        throw new Error(`Product not found for ID: ${productId}`);
+    }
 
-    // Save the updated record
-    await statusRecord.save();
+    const productPack = Number(product.productPack) || 1;
+    const purchasePrice = Number(product.productPurchasePrice) || 0;
 
-    const product = await this.findById(productId, 'productPack');
-
-    // Calculate the total purchase price for the returned quantity
-    const totalCost = returnedQuantity * (parseFloat(statusRecord.newPrice)/parseFloat(product?.productPack));
-
-    return Number(totalCost); // Return the total cost for the returned quantity
+    // Calculate the total purchase price for the returned quantity from product purchase price
+    const totalCost = (Number(returnedQuantity) * purchasePrice) / productPack;
+    return Number(totalCost);
 };
 
 

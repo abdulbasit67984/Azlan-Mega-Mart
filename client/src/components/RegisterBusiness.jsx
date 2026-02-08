@@ -7,6 +7,7 @@ import { Button, Input, Logo } from './index.js'
 import { useDispatch, useSelector } from 'react-redux'
 import { useForm } from 'react-hook-form'
 import UpdateBusiness from './UpdateBusiness.jsx'
+import { showSuccessToast, showErrorToast } from '../utils/toast'
 
 function RegisterBusiness() {
     const navigate = useNavigate()
@@ -35,6 +36,7 @@ function RegisterBusiness() {
             if (reponse) {
                 setResponse(reponse)
                 setIsStoreCreated(true)
+                showSuccessToast(reponse || 'Business registered successfully!')
                 setIsLoading(false)
             }
 
@@ -51,6 +53,7 @@ function RegisterBusiness() {
             const errorMessage = preContent.split('\n')[0]; // Get the first line
 
             setError(errorMessage)
+            showErrorToast(errorMessage)
         } finally {
             setIsLoading(false)
             reset()

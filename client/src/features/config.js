@@ -457,6 +457,27 @@ export class Config {
         }
     }
 
+    async fetchProductHistoryForCustomer(customerId, productId) {
+        try {
+            const response = await this.client.get(`/bill/get-product-history`, {
+                params: { customerId, productId },
+                headers: {
+                    Authorization: ` Bearer ${authService.getAccessToken()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error in Fetching Product History:", error);
+            throw error;
+        }
+    }
+
 
     async createInvoice({ ...props }) {
         try {
@@ -1383,6 +1404,121 @@ export class Config {
 
         } catch (error) {
             console.error("Error in Merging bills:", error);
+            throw error;
+        }
+    }
+
+
+    // Whatsapp APIs
+
+    async initWhatsapp() {
+        try {
+            const response = await this.client.get(`/whatsapp/init`, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error initializing WhatsApp:", error);
+            throw error;
+        }
+    }
+
+    async getQrCode() {
+        try {
+            const response = await this.client.get(`/whatsapp/qr`, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error fetching QR Code:", error);
+            throw error;
+        }
+    }
+
+    async checkWhatsappStatus() {
+        try {
+            const response = await this.client.get(`/whatsapp/status`, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error checking WhatsApp status:", error);
+            throw error;
+        }
+    }
+    
+    async sendWhatsappMessage(data) {
+        try {
+            const response = await this.client.post(`/whatsapp/send-message`,
+                JSON.stringify(data),
+                {
+                    headers: {
+                        Authorization: `Bearer ${authService.getAccessToken()}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error sending WhatsApp message:", error);
+            throw error;
+        }
+    }
+
+    async logoutWhatsapp() {
+        try {
+            const response = await this.client.post(`/whatsapp/logout`, {}, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error logging out WhatsApp:", error);
+            throw error;
+        }
+    }
+
+    async reconnectWhatsapp() {
+        try {
+            const response = await this.client.post(`/whatsapp/reconnect`, {}, {
+                headers: {
+                    Authorization: `Bearer ${authService.getAccessToken()}`,
+                },
+            });
+            if (response.data) {
+                return response.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error reconnecting WhatsApp:", error);
             throw error;
         }
     }
